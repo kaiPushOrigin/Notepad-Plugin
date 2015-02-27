@@ -1,5 +1,5 @@
 
-#include <iostream>0
+#include <iostream>
 #include <windows.h>
 using namespace std;
 int main()
