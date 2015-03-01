@@ -1,5 +1,5 @@
 # Notepad-Plugin
-function findPath(filename)
+function getPath(filename)
 
 function compile(filename)
 
