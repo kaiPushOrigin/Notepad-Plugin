@@ -125,19 +125,22 @@ void helloDlg()
 {
     ::MessageBox(NULL, TEXT("Hello, Notepad++!"), TEXT("Notepad++ Plugin Template"), MB_OK);
 }
-//got compile to work, it compiles and only displays command prompt if the compile failed, otherwise
-//shows success message
-//now we just need to get it to work with reading from the path file
-void compile()
+/*
+got compile to work, it compiles and only displays command prompt if the compile failed, otherwise
+shows success message , 
+it shows success message the first time it compiles a java file with errors when the previous
+was successful, every other time it shows the errors
+same with the first time compiling a file that does not compile after compiling one that does
+  otherwise works fine*/
+string compile(string fileName, LPCSTR path)
 {
-    string fileName = "HelloWorld.java";
-    string run = "/k javac ";
-    run += fileName;
-    string run2 = run + " 2> tmpfile.txt";
-    LPCSTR runCommand = run2.c_str();
-    LPCSTR path = "C:/Users/Rikku-strife/scripts/Desktop";
-    ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand, path, SW_HIDE);
-    ifstream file("C:/Users/Rikku-strife/scripts/Desktop/tmpfile.txt"); 
+    string compile = "/k javac " + fileName;
+    string tmpFile = path;
+    tmpFile = tmpFile + "/tmpFile.txt";
+    ifstream file(tmpFile);
+    string compileRedirect = compile + " 2> " + tmpFile;
+    LPCSTR compileCommand = compileRedirect.c_str();
+    ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand, path, SW_HIDE);
     file.seekg(0, file.end);
     int fileLength = file.tellg();
     file.seekg(0, file.beg);
@@ -147,20 +150,42 @@ void compile()
     }
     else 
     {
-        runCommand = run.c_str();
-        ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand, path, SW_SHOW);
+        compileCommand = compile.c_str();
+        ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand, path, SW_SHOW);
+        return fileName;
     }
-    file.close();
-    remove("C:/Users/Rikku-strife/scripts/Desktop/tmpfile.txt");
     fileName.erase (fileName.end()-5, fileName.end());
-    fileName = fileName + ".class";
+    return fileName;
 }
-
+// needs to read in path and fileName
+void compileJavaFile()
+{
+    LPCSTR path = "C:/Users/Rikku-strife/scripts/Desktop";
+    char buff[4096];
+    GetCurrentDirectoryA(4096, buff);
+    string fileName = "HelloWorld.java";
+    compile(fileName,path);
+}
+//works fine
+void run(string fileName, LPCSTR path)
+{
+    string run = "/k java " + fileName;
+    LPCSTR runCommand = run.c_str();
+    ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand, path, SW_SHOW);
+}
+//need to change it to be able to read in path and fileName. otherwise works
 void compileAndRun()
 {
-
+    LPCSTR path = "C:/Users/Rikku-strife/scripts/Desktop";
+    char buff[4096];
+    GetCurrentDirectoryA(4096, buff);
+    string fileName = "HelloWorld.java";
+    fileName = compile(fileName,path);
+    string compare = fileName;
+    compare.erase(compare.begin(), compare.end()-5);
+    if (strcmp(compare.c_str(),  ".java")  == 0) return;
+    run(fileName,path);
 }
-
 void tabChecker()
 {
 
