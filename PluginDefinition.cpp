@@ -18,10 +18,7 @@
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
 #include <iostream>
-#include <string>
 #include <fstream>
-
-using namespace std;
 //
 // The plugin data that Notepad++ needs
 //
@@ -51,7 +48,7 @@ void pluginCleanUp()
 // You should fill your plugins commands here
 void commandMenuInit()
 {
-
+    
     //--------------------------------------------//
     //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//
     //--------------------------------------------//
@@ -62,8 +59,8 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-    setCommand(0, TEXT("Compile"), compile, NULL, false);   
-    setCommand(1, TEXT("Compile and Run"), helloDlg, NULL, false);
+    setCommand(0, TEXT("Compile"), compileJavaFile , NULL, false);   
+    setCommand(1, TEXT("Compile and Run"), compileAndRun, NULL, false);
 	setCommand(2, TEXT("---"), NULL, NULL, false);
 	setCommand(3, TEXT("JAR File Creator"), JARfc, NULL, false);
 	setCommand(4, TEXT("Tab Checker"), helloDlg, NULL, false);
@@ -125,67 +122,91 @@ void helloDlg()
 {
     ::MessageBox(NULL, TEXT("Hello, Notepad++!"), TEXT("Notepad++ Plugin Template"), MB_OK);
 }
-/*
-got compile to work, it compiles and only displays command prompt if the compile failed, otherwise
-shows success message , 
-it shows success message the first time it compiles a java file with errors when the previous
-was successful, every other time it shows the errors
-same with the first time compiling a file that does not compile after compiling one that does
-  otherwise works fine*/
-string compile(string fileName, LPCSTR path)
+
+// currently not updating fileName, not being called because of that, code it get path is 
+// included in  compileJavaFile and compileAndRun functions
+string getPath(string fileName)
 {
-    string compile = "/k javac " + fileName;
-    string tmpFile = path;
-    tmpFile = tmpFile + "/tmpFile.txt";
+    SendMessageA(nppData._nppHandle, NPPM_SAVECURRENTFILE,0,0);
+    wchar_t *fullPath = new wchar_t[MAX_PATH], *name = new wchar_t[MAX_PATH];
+    SendMessageA(nppData._nppHandle, NPPM_GETFILENAME, 0, (LPARAM)name);
+    wstring ws = name;
+    fileName = string(ws.begin(),ws.end());
+    SendMessageA(nppData._nppHandle, NPPM_GETCURRENTDIRECTORY,0,(LPARAM)fullPath);
+    ws = fullPath;
+    return string(ws.begin(),ws.end());
+} 
+
+string compile(string fileName, string path)
+{
+    string compileCommand = "/k cd " + path + " & javac " + fileName;
+    string tmpFile = path + "/tmpFile.txt";
     ifstream file(tmpFile);
-    string compileRedirect = compile + " 2> " + tmpFile;
-    LPCSTR compileCommand = compileRedirect.c_str();
-    ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand, path, SW_HIDE);
+    // command to redirect compiler message into file
+    string compileRedirect = compileCommand + " 2> " + tmpFile;
+    // command to delete tmpfile
+    tmpFile = "DEL /F /S /Q /A \"" + tmpFile + "\"";
+    ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileRedirect.c_str(), NULL, SW_HIDE);
     file.seekg(0, file.end);
     int fileLength = file.tellg();
     file.seekg(0, file.beg);
+    ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", tmpFile.c_str(), NULL, SW_HIDE);
+    //if file is empty, compile works
     if (fileLength == 0) 
     {
         ::MessageBox(NULL, TEXT("Compiling Successful"), TEXT("Compiler Message"), MB_OK);
+        fileName.erase (fileName.end()-5, fileName.end());
     }
+    //otherwise show message
     else 
     {
-        compileCommand = compile.c_str();
-        ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand, path, SW_SHOW);
-        return fileName;
+        ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand.c_str(), NULL, SW_SHOW);
     }
-    fileName.erase (fileName.end()-5, fileName.end());
     return fileName;
 }
-// needs to read in path and fileName
+
 void compileJavaFile()
 {
-    LPCSTR path = "C:/Users/Rikku-strife/scripts/Desktop";
-    char buff[4096];
-    GetCurrentDirectoryA(4096, buff);
-    string fileName = "HelloWorld.java";
+    string fileName, path;
+    //everything bellow is in getPath
+    SendMessageA(nppData._nppHandle, NPPM_SAVECURRENTFILE,0,0);
+    wchar_t *fullPath = new wchar_t[MAX_PATH], *name = new wchar_t[MAX_PATH];
+    SendMessageA(nppData._nppHandle, NPPM_GETFILENAME, 0, (LPARAM)name);
+    wstring ws = name;
+    fileName = string(ws.begin(),ws.end());
+    SendMessageA(nppData._nppHandle, NPPM_GETCURRENTDIRECTORY,0,(LPARAM)fullPath);
+    ws = fullPath;
+    path = string(ws.begin(),ws.end());
+    //everything above is in getPath()
     compile(fileName,path);
 }
-//works fine
-void run(string fileName, LPCSTR path)
+
+void run(string fileName, string path)
 {
-    string run = "/k java " + fileName;
-    LPCSTR runCommand = run.c_str();
-    ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand, path, SW_SHOW);
+    string runCommand = "/k cd " + path + " & java " + fileName;
+    ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand.c_str(), NULL, SW_SHOW);
 }
-//need to change it to be able to read in path and fileName. otherwise works
+
 void compileAndRun()
 {
-    LPCSTR path = "C:/Users/Rikku-strife/scripts/Desktop";
-    char buff[4096];
-    GetCurrentDirectoryA(4096, buff);
-    string fileName = "HelloWorld.java";
+    string fileName, path;
+    //everything below is in getPath()
+    SendMessageA(nppData._nppHandle, NPPM_SAVECURRENTFILE,0,0);
+    wchar_t *fullPath = new wchar_t[MAX_PATH], *name = new wchar_t[MAX_PATH];
+    SendMessageA(nppData._nppHandle, NPPM_GETFILENAME, 0, (LPARAM)name);
+    wstring ws = name;
+    fileName = string(ws.begin(),ws.end());
+    SendMessageA(nppData._nppHandle, NPPM_GETCURRENTDIRECTORY,0,(LPARAM)fullPath);
+    ws = fullPath;
+    path = string(ws.begin(),ws.end());
+    //everything above is in getPath()
     fileName = compile(fileName,path);
     string compare = fileName;
     compare.erase(compare.begin(), compare.end()-5);
     if (strcmp(compare.c_str(),  ".java")  == 0) return;
     run(fileName,path);
 }
+
 void tabChecker()
 {
 
