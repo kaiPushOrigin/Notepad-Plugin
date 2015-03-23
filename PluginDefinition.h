@@ -74,9 +74,10 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //
 void hello();
 void helloDlg();
-string compile(string fileName, LPCSTR path);
+string getPath(string fileName);
+string compile(string fileName, string path);
 void compileJavaFile();
-void run(string fileName, LPCSTR path);
+void run(string fileName, string path);
 void compileAndRun();
 void JARfc();
 void tabChecker();
