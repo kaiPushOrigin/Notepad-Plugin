@@ -123,9 +123,7 @@ void helloDlg()
     ::MessageBox(NULL, TEXT("Hello, Notepad++!"), TEXT("Notepad++ Plugin Template"), MB_OK);
 }
 
-// currently not updating fileName, not being called because of that, code it get path is 
-// included in  compileJavaFile and compileAndRun functions
-string getPath(string fileName)
+string getPath(string &fileName)
 {
     SendMessageA(nppData._nppHandle, NPPM_SAVECURRENTFILE,0,0);
     wchar_t *fullPath = new wchar_t[MAX_PATH], *name = new wchar_t[MAX_PATH];
@@ -135,49 +133,37 @@ string getPath(string fileName)
     SendMessageA(nppData._nppHandle, NPPM_GETCURRENTDIRECTORY,0,(LPARAM)fullPath);
     ws = fullPath;
     return string(ws.begin(),ws.end());
-} 
+}    
 
 string compile(string fileName, string path)
 {
     string compileCommand = "/k cd " + path + " & javac " + fileName;
-    string tmpFile = path + "/tmpFile.txt";
-    ifstream file(tmpFile);
-    // command to redirect compiler message into file
-    string compileRedirect = compileCommand + " 2> " + tmpFile;
-    // command to delete tmpfile
-    tmpFile = "DEL /F /S /Q /A \"" + tmpFile + "\"";
+    string errorLog = path + "/log_" + fileName + ".txt"; 
+	string compileRedirect = compileCommand + " 2> " + errorLog;
     ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileRedirect.c_str(), NULL, SW_HIDE);
+    Sleep(3000);
+    ifstream file(errorLog);
     file.seekg(0, file.end);
-    int fileLength = file.tellg();
+    long long fileLength = file.tellg();
     file.seekg(0, file.beg);
-    ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", tmpFile.c_str(), NULL, SW_HIDE);
-    //if file is empty, compile works
     if (fileLength == 0) 
     {
-        ::MessageBox(NULL, TEXT("Compiling Successful"), TEXT("Compiler Message"), MB_OK);
-        fileName.erase (fileName.end()-5, fileName.end());
+        ::MessageBox(NULL, TEXT("Compiling Successful"), TEXT("PESMU Message"), MB_OK);
+        fileName.erase(fileName.end()-5, fileName.end());
     }
-    //otherwise show message
     else 
     {
         ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand.c_str(), NULL, SW_SHOW);
     }
+    file.close();
+    remove(errorLog.c_str());
     return fileName;
 }
 
 void compileJavaFile()
 {
     string fileName, path;
-    //everything bellow is in getPath
-    SendMessageA(nppData._nppHandle, NPPM_SAVECURRENTFILE,0,0);
-    wchar_t *fullPath = new wchar_t[MAX_PATH], *name = new wchar_t[MAX_PATH];
-    SendMessageA(nppData._nppHandle, NPPM_GETFILENAME, 0, (LPARAM)name);
-    wstring ws = name;
-    fileName = string(ws.begin(),ws.end());
-    SendMessageA(nppData._nppHandle, NPPM_GETCURRENTDIRECTORY,0,(LPARAM)fullPath);
-    ws = fullPath;
-    path = string(ws.begin(),ws.end());
-    //everything above is in getPath()
+    path = getPath(fileName);
     compile(fileName,path);
 }
 
@@ -188,18 +174,9 @@ void run(string fileName, string path)
 }
 
 void compileAndRun()
-{
+{ 
     string fileName, path;
-    //everything below is in getPath()
-    SendMessageA(nppData._nppHandle, NPPM_SAVECURRENTFILE,0,0);
-    wchar_t *fullPath = new wchar_t[MAX_PATH], *name = new wchar_t[MAX_PATH];
-    SendMessageA(nppData._nppHandle, NPPM_GETFILENAME, 0, (LPARAM)name);
-    wstring ws = name;
-    fileName = string(ws.begin(),ws.end());
-    SendMessageA(nppData._nppHandle, NPPM_GETCURRENTDIRECTORY,0,(LPARAM)fullPath);
-    ws = fullPath;
-    path = string(ws.begin(),ws.end());
-    //everything above is in getPath()
+    path = getPath(fileName);
     fileName = compile(fileName,path);
     string compare = fileName;
     compare.erase(compare.begin(), compare.end()-5);
@@ -212,11 +189,90 @@ void tabChecker()
 
 }
 
+void searchForClassFiles(string path, string *&fileNames, int &arraySize)
+{
+    WIN32_FIND_DATAA findFileData;
+    path = path + "/*.class";
+    HANDLE find = FindFirstFileA(path.c_str(), &findFileData) ;
+    if (find == INVALID_HANDLE_VALUE) 
+    {
+        ::MessageBox(NULL, TEXT("No java class files found."), TEXT("PESMU message"), MB_OK);
+    } 
+    else
+    {
+        arraySize = 1;
+        while (FindNextFileA(find, &findFileData) != 0)
+        {
+            arraySize++;
+        }
+        fileNames = new string[arraySize];
+        find = FindFirstFileA(path.c_str(), &findFileData);
+        fileNames[0] = findFileData.cFileName;
+        for (int i = 1; i < arraySize; i++)
+        {
+            FindNextFileA(find, &findFileData);
+            fileNames[i] = findFileData.cFileName;
+        }
+    }
+}
+
+void chooseClassFiles(string &mainClass, string names[], int arraySize)
+{
+    int width = 400, height = 500, xPos = (GetSystemMetrics(SM_CXSCREEN) - width)/2;
+    int yPos = (GetSystemMetrics(SM_CYSCREEN) - height)/2, buttonYPos = 30;
+    string *newNames = new string[arraySize-1];//array to store class files , with main class file removed
+    //create window
+    HWND hwnd = CreateWindowA("BUTTON", "Choose main class file",  WS_OVERLAPPEDWINDOW | BS_GROUPBOX | WS_GROUP ,xPos, yPos, width, height, NULL, NULL, NULL, NULL);
+    HWND *hwndButton = new HWND[arraySize];
+    for (int i = 0; i < arraySize; i++)  
+    {
+        //add button to window, one for each file in array
+        hwndButton[i] = CreateWindowA("BUTTON", names[i].c_str(),WS_VISIBLE |  WS_CHILD | BS_AUTOCHECKBOX, 10, buttonYPos, 350, 20, hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE),NULL);      
+        buttonYPos += 30;
+    }
+    //button to close window, not complete
+    HWND okButton = CreateWindowA("BUTTON", "OK",WS_VISIBLE |  WS_CHILD | WS_GROUP | BS_PUSHBUTTON, (width/2)-25, height-20, 50, 20, hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE),NULL); 
+    
+    ShowWindow(hwnd, SW_SHOW);
+    //untested below
+    for (int i = 0; i < arraySize; i++)
+    {
+        //checks each button for the one selected, saves selected file in string
+        long state = SendMessage(hwndButton[i], BM_GETSTATE, 0, 0);
+        if (state == BST_CHECKED)
+        {
+            mainClass = names[i];
+            //stores all files except main class file into array
+            int j;
+            for (j = 0; j < i; j++)
+            {
+                newNames[j] = names[j];
+            }
+            for (int k = j+1; k < arraySize-1; k++)
+            {
+                newNames[k] = names[k+1];
+            }
+        }
+
+    }
+    //create new window,same as above, with checkboxes
+    HWND checkHwnd = CreateWindowA("BUTTON", "Choose class files to include",  WS_OVERLAPPEDWINDOW | BS_GROUPBOX | WS_GROUP ,xPos, yPos, width, height, NULL, NULL, NULL, NULL);
+    HWND *hwndCheckButton = new HWND[arraySize];
+    for (int i = 0; i < arraySize-1; i++)  
+    {
+        hwndCheckButton[i] = CreateWindowA("BUTTON", newNames[i].c_str(),WS_VISIBLE |  WS_CHILD | BS_AUTOCHECKBOX, 10, buttonYPos, 350, 20, hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE),NULL);      
+        buttonYPos += 30;
+    }
+}
+
 void JARfc()
 {
-    HWND hwnd;
-    hwnd = CreateWindowA("BUTTON", "Choose class files",BS_CHECKBOX, CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL, NULL, NULL, NULL);
-    ShowWindow(hwnd, SW_SHOW);
+    string fileName, path, mainClass;
+    path = getPath(fileName);
+    string *fileNames = NULL;
+    int arraySize = 0;
+    searchForClassFiles(path, fileNames, arraySize);
+    chooseClassFiles(mainClass, fileNames, arraySize);
 }
 
 void compareFiles()
