@@ -27,6 +27,7 @@ using namespace std;
 // The plugin data that Notepad++ needs
 //
 FuncItem funcItem[nbFunc];
+int rtnFlg = 0;
 
 //
 // The data of Notepad++ that you can use in your plugin commands
@@ -165,22 +166,23 @@ void compile()
 
 	//Open Command Prompt and pipe program to JDK and redirect output to log file
 	ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileAndRedirCommand.c_str(), NULL, SW_HIDE);
-	
+	Sleep(2000);
+
 	//check log file, if empty, compiling success, else fail and show errors
 	ifstream file(logPath);
-	Sleep(3000);
 	file.seekg(0, file.end);
-	long long fileLength = file.tellg();
-	file.seekg(0, file.beg);
+	int fileLength = file.tellg();
 	if (fileLength == 0) 
     {
         ::MessageBox(NULL, TEXT("Compiling Successful"), TEXT("Compiler Message"), MB_OK);
+		rtnFlg = 0;
     }
     //otherwise show message
     else
     {
 		::MessageBox(NULL, TEXT("Compiling Not Successful"), TEXT("Compiler Message"), MB_OK);
-        ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand.c_str(), NULL, SW_SHOW);	
+        ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand.c_str(), NULL, SW_SHOW);
+		rtnFlg = 1;
     }
 	file.close();
 	remove(logPath.c_str());
@@ -196,14 +198,15 @@ void compileAndRun()
 	string fileName,path;
 	path = getPath();
 	fileName = getFileName();
-	Sleep(500);
 	//make the string to run the file
 	int length = fileName.length();
 	length = length - 5;
 	fileName.erase(fileName.begin()+length,fileName.end());
-
-	string runCommand = "/k cd " + path + " & java " + fileName;
-	ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand.c_str(), NULL, SW_SHOW);
+	if (rtnFlg != 1)
+	{
+		string runCommand = "/k cd " + path + " & java " + fileName;
+		ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand.c_str(), NULL, SW_SHOW);
+	}
 
 }
 
