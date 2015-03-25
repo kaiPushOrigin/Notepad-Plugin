@@ -74,11 +74,13 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //
 void hello();
 void helloDlg();
-string getPath(string fileName);
+string getPath(string &fileName);
 string compile(string fileName, string path);
 void compileJavaFile();
 void run(string fileName, string path);
 void compileAndRun();
+void searchForClassFiles(string path, string *&fileNames, int &arraySize);
+void chooseClassFiles(string &mainClass, string names[], int arraySize); 
 void JARfc();
 void tabChecker();
 void compareFiles();
@@ -87,3 +89,4 @@ void cnctgtbsh();
 void bgnnrsGd();
 
 #endif //PLUGINDEFINITION_H
+
