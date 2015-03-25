@@ -15,8 +15,13 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <iostream>
+#include <windows.h>
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
+#include <fstream>
+#include <stdlib.h>
+using namespace std;
 
 //
 // The plugin data that Notepad++ needs
@@ -58,14 +63,14 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-    setCommand(0, TEXT("Compile"), hello, NULL, false);
-    setCommand(1, TEXT("Compile and Run"), helloDlg, NULL, false);
+	setCommand(0, TEXT("Compile"), compile, NULL, false);
+    setCommand(1, TEXT("Compile and Run"), compileAndRun, NULL, false);
 	setCommand(2, TEXT("---"), NULL, NULL, false);
 	setCommand(3, TEXT("JAR File Creator"), helloDlg, NULL, false);
 	setCommand(4, TEXT("Tab Checker"), helloDlg, NULL, false);
 	setCommand(5, TEXT("Compare Files"), helloDlg, NULL, false);
-	setCommand(6, TEXT("Connect to StackOverflow"), helloDlg, NULL, false);
-	setCommand(7, TEXT("Connect to GitBash"), helloDlg, NULL, false);
+	setCommand(6, TEXT("Connect to StackOverflow"),cnctStckOvrflw, NULL, false);
+	setCommand(7, TEXT("Connect to GitBash"), cnctgtbsh, NULL, false);
 	setCommand(8, TEXT("Beginner's Guide"), helloDlg, NULL, false);
 }
 
@@ -122,13 +127,83 @@ void helloDlg()
     ::MessageBox(NULL, TEXT("Hello, Notepad++!"), TEXT("Notepad++ Plugin Template"), MB_OK);
 }
 
+string getPath()
+{
+    SendMessageA(nppData._nppHandle, NPPM_SAVECURRENTFILE,0,0);
+    wchar_t *fullPath = new wchar_t[MAX_PATH];
+    SendMessageA(nppData._nppHandle, NPPM_GETCURRENTDIRECTORY,0,(LPARAM)fullPath);
+    wstring fP = fullPath;
+    return string(fP.begin(),fP.end());
+}
+
+string getFileName()
+{
+	wchar_t *name = new wchar_t[MAX_PATH];
+    SendMessageA(nppData._nppHandle, NPPM_GETFILENAME, 0, (LPARAM)name);
+    wstring ws = name;
+    return string(ws.begin(),ws.end());
+}
+
 void compile()
 {
+	//Save Current Document
+	::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
+	
+	//get the path of the document
+	string fileName, path;
+	path = getPath();
+	//get the name of the document
+	fileName = getFileName();
 
+	//making a log file
+	string log = "log_" + fileName + ".txt" ;
+	string logPath = path + "//"+ log;
+
+	//combine the strings together to make one command
+	string compileAndRedirCommand = "/k cd " + path + " & javac " + fileName + " 2> " + log;
+	string compileCommand = "/k cd " + path + " & javac " + fileName;
+
+	//Open Command Prompt and pipe program to JDK and redirect output to log file
+	ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileAndRedirCommand.c_str(), NULL, SW_HIDE);
+	
+	//check log file, if empty, compiling success, else fail and show errors
+	ifstream file(logPath);
+	Sleep(3000);
+	file.seekg(0, file.end);
+	long long fileLength = file.tellg();
+	file.seekg(0, file.beg);
+	if (fileLength == 0) 
+    {
+        ::MessageBox(NULL, TEXT("Compiling Successful"), TEXT("Compiler Message"), MB_OK);
+    }
+    //otherwise show message
+    else
+    {
+		::MessageBox(NULL, TEXT("Compiling Not Successful"), TEXT("Compiler Message"), MB_OK);
+        ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand.c_str(), NULL, SW_SHOW);	
+    }
+	file.close();
+	remove(logPath.c_str());
 }
 
 void compileAndRun()
 {
+	//Save Current Document
+	::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
+	//Use Compile
+	compile();
+	//get parameters for run
+	string fileName,path;
+	path = getPath();
+	fileName = getFileName();
+	Sleep(500);
+	//make the string to run the file
+	int length = fileName.length();
+	length = length - 5;
+	fileName.erase(fileName.begin()+length,fileName.end());
+
+	string runCommand = "/k cd " + path + " & java " + fileName;
+	ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand.c_str(), NULL, SW_SHOW);
 
 }
 
@@ -149,12 +224,12 @@ void compareFiles()
 
 void cnctStckOvrflw()
 {
-
+	ShellExecuteA(NULL,"open","www.stackoverflow.com",NULL,NULL,SW_SHOW);
 }
 
 void cnctgtbsh()
 {
-
+	ShellExecuteA(NULL,"open","www.github.com",NULL,NULL,SW_SHOW);
 }
 
 void bgnnrsGd()

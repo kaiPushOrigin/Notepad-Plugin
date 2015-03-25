@@ -23,7 +23,8 @@
 // All difinitions of plugin interface
 //
 #include "PluginInterface.h"
-
+#include <string>
+using namespace std;
 //-------------------------------------//
 //-- STEP 1. DEFINE YOUR PLUGIN NAME --//
 //-------------------------------------//
@@ -81,5 +82,7 @@ void compareFiles();
 void cnctStckOvrflw();
 void cnctgtbsh();
 void bgnnrsGd();
+string getPath();
+string getFileName();
 
 #endif //PLUGINDEFINITION_H
