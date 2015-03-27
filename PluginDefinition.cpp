@@ -72,7 +72,9 @@ void commandMenuInit()
 	setCommand(5, TEXT("Compare Files"), helloDlg, NULL, false);
 	setCommand(6, TEXT("Connect to StackOverflow"),cnctStckOvrflw, NULL, false);
 	setCommand(7, TEXT("Connect to GitBash"), cnctgtbsh, NULL, false);
-	setCommand(8, TEXT("Beginner's Guide"), helloDlg, NULL, false);
+	setCommand(8, TEXT("Beginner's Guide"), bgnnrsGd, NULL, false);
+	setCommand(9, TEXT("---"), NULL, NULL, false);
+	setCommand(10, TEXT("About"),helloDlg, NULL, false);
 }
 
 //
@@ -232,10 +234,25 @@ void cnctStckOvrflw()
 
 void cnctgtbsh()
 {
-	ShellExecuteA(NULL,"open","www.github.com",NULL,NULL,SW_SHOW);
+	string configFile = "C:/Program Files (x86)/Notepad++/plugins/Config/PESMU/config.txt";
+	ifstream conFilepath;
+	conFilepath.open("C:/Program Files (x86)/Notepad++/plugins/Config/PESMU/config.txt");
+	string path;
+	while(conFilepath.is_open())
+	{
+		getline(conFilepath,path);
+		conFilepath.close();
+	}
+	ShellExecuteA(NULL,"open",path.c_str(),NULL,NULL,SW_SHOW);
 }
 
 void bgnnrsGd()
 {
+	string guidepath = "C:/Program Files (x86)/Notepad++/plugins/doc/PESMU/BeginnersGuide.mht";
+	ShellExecuteA(NULL,"open",guidepath.c_str(),NULL,NULL,SW_SHOW);
+}
 
+void about()
+{
+	
 }
