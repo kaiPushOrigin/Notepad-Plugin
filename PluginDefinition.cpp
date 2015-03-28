@@ -161,18 +161,17 @@ void compile()
 
 	//making a log file
 	string log = "log_" + fileName + ".txt" ;
-	string logPath = path + "//"+ log;
+	string logPath = path + "//" + log;
 
 	//creating a path for the cmd in labs
-	string setJavaPath = "set path=%path%;C:\Program Files\Java\jdk1.7.0_21\bin";
+	//string setJavaPath = "set path=%path%;C:\Program Files\Java\jdk1.7.0_21\bin";
 
 	//combine the strings together to make one command
-	string compileAndRedirCommand = "/k cd " + path + " & javac " + fileName + " 2> " + log;
-	//string SMULabcmnd = setJavaPath +"& javac " + path +"//" + fileName "2> " + log ;
-	string compileCommand = "/k cd " + path + " & javac " + fileName;
+	string compileAndRedirCommand = "/k cd /d" + path + " & javac " + fileName + " 2> " + log;
+	string compileCommand = "/k cd /d" + path + " & javac " + fileName;
 
 	//Open Command Prompt and pipe program to JDK and redirect output to log file
-	ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileAndRedirCommand.c_str(), NULL, SW_HIDE);
+	ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileAndRedirCommand.c_str(), NULL, SW_SHOW);
 	Sleep(2000);
 
 	//check log file, if empty, compiling success, else fail and show errors
@@ -216,8 +215,8 @@ void compileAndRun()
 	fileName.erase(fileName.begin()+length,fileName.end());
 	if (rtnFlg != 1)
 	{
-		string runCommand = "/k cd " + path + " & java " + fileName;
-		ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand.c_str(), NULL, SW_SHOW);
+		string runCommand = "/k cd /d" + path + " & java " + fileName;
+		ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", runCommand.c_str(), NULL, SW_HIDE);
 	}
 
 }
