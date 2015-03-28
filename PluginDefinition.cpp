@@ -64,13 +64,32 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-	setCommand(0, TEXT("Compile"), compile, NULL, false);
-    setCommand(1, TEXT("Compile and Run"), compileAndRun, NULL, false);
+    
+    ShortcutKey *Compile_key = new ShortcutKey;
+    Compile_key->_isAlt      = false;
+    Compile_key->_isCtrl     = true;
+    Compile_key->_isShift    = true;
+    Compile_key->_key        = 0x76; // F7 Key
+    
+    ShortcutKey *Run_key = new ShortcutKey;
+    Run_key->_isAlt      = false;
+    Run_key->_isCtrl     = true;
+    Run_key->_isShift    = true;
+    Run_key->_key        = 0x74; // F5 Key
+    
+    ShortcutKey *Java_key = new ShortcutKey;
+    Java_key->_isAlt      = false;
+    Java_key->_isCtrl     = true;
+    Java_key->_isShift    = true;
+    Java_key->_key        = 0x4A; // J Key
+    
+	setCommand(0, TEXT("Compile"), compile, Compile_key, false);
+    setCommand(1, TEXT("Compile and Run"), compileAndRun, Run_key, false);
 	setCommand(2, TEXT("---"), NULL, NULL, false);
 	setCommand(3, TEXT("JAR File Creator"), helloDlg, NULL, false);
 	setCommand(4, TEXT("Tab Checker"), helloDlg, NULL, false);
 	setCommand(5, TEXT("Compare Files"), helloDlg, NULL, false);
-	setCommand(6, TEXT("Connect to Java Documentation"),cnctJvDc, NULL, false);
+	setCommand(6, TEXT("Connect to Java Documentation"),cnctJvDc, Java_key, false);
 	setCommand(7, TEXT("Connect to StackOverflow"),cnctStckOvrflw, NULL, false);
 	setCommand(8, TEXT("Connect to GitBash"), cnctgtbsh, NULL, false);
 	setCommand(9, TEXT("Beginner's Guide"), bgnnrsGd, NULL, false);
