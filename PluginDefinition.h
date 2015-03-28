@@ -23,6 +23,7 @@
 // All difinitions of plugin interface
 //
 #include "PluginInterface.h"
+#include "Window.h"
 #include <string>
 using namespace std;
 //-------------------------------------//
@@ -38,7 +39,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("PESMU Plugin");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 8;
+const int nbFunc = 12;
 
 
 //
@@ -79,9 +80,11 @@ void compileAndRun();
 void JARfc();
 void tabChecker();
 void compareFiles();
+void cnctJvDc();
 void cnctStckOvrflw();
 void cnctgtbsh();
 void bgnnrsGd();
+void about();
 string getPath();
 string getFileName();
 

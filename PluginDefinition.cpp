@@ -70,11 +70,12 @@ void commandMenuInit()
 	setCommand(3, TEXT("JAR File Creator"), helloDlg, NULL, false);
 	setCommand(4, TEXT("Tab Checker"), helloDlg, NULL, false);
 	setCommand(5, TEXT("Compare Files"), helloDlg, NULL, false);
-	setCommand(6, TEXT("Connect to StackOverflow"),cnctStckOvrflw, NULL, false);
-	setCommand(7, TEXT("Connect to GitBash"), cnctgtbsh, NULL, false);
-	setCommand(8, TEXT("Beginner's Guide"), bgnnrsGd, NULL, false);
-	setCommand(9, TEXT("---"), NULL, NULL, false);
-	setCommand(10, TEXT("About"),helloDlg, NULL, false);
+	setCommand(6, TEXT("Connect to Java Documentation"),cnctJvDc, NULL, false);
+	setCommand(7, TEXT("Connect to StackOverflow"),cnctStckOvrflw, NULL, false);
+	setCommand(8, TEXT("Connect to GitBash"), cnctgtbsh, NULL, false);
+	setCommand(9, TEXT("Beginner's Guide"), bgnnrsGd, NULL, false);
+	setCommand(10, TEXT("---"), NULL, NULL, false);
+	setCommand(11, TEXT("About"),helloDlg, NULL, false);
 }
 
 //
@@ -162,8 +163,12 @@ void compile()
 	string log = "log_" + fileName + ".txt" ;
 	string logPath = path + "//"+ log;
 
+	//creating a path for the cmd in labs
+	string setJavaPath = "set path=%path%;C:\Program Files\Java\jdk1.7.0_21\bin";
+
 	//combine the strings together to make one command
 	string compileAndRedirCommand = "/k cd " + path + " & javac " + fileName + " 2> " + log;
+	//string SMULabcmnd = setJavaPath +"& javac " + path +"//" + fileName "2> " + log ;
 	string compileCommand = "/k cd " + path + " & javac " + fileName;
 
 	//Open Command Prompt and pipe program to JDK and redirect output to log file
@@ -176,16 +181,21 @@ void compile()
 	int fileLength = file.tellg();
 	if (fileLength == 0) 
     {
-        ::MessageBox(NULL, TEXT("Compiling Successful"), TEXT("Compiler Message"), MB_OK);
+        ::MessageBox(NULL, TEXT("Compiling Successful!"), TEXT("PESMU Compiler Message"), MB_OK);
 		rtnFlg = 0;
     }
     //otherwise show message
-    else
+	else if (fileLength > 0)
     {
-		::MessageBox(NULL, TEXT("Compiling Not Successful"), TEXT("Compiler Message"), MB_OK);
+		::MessageBox(NULL, TEXT("Compiling Not Successful!"), TEXT("PESMU Compiler Message"), MB_OK);
         ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/cmd.exe", compileCommand.c_str(), NULL, SW_SHOW);
 		rtnFlg = 1;
     }
+	else
+	{
+		::MessageBox(NULL,TEXT("Could not compile. Either JDK is not installed, or the path provided is incorrect."), TEXT("PESMU Compiler Message"), MB_OK);
+		rtnFlg = 0;
+	}
 	file.close();
 	remove(logPath.c_str());
 }
@@ -214,7 +224,12 @@ void compileAndRun()
 
 void tabChecker()
 {
+	//Get name of document
+	string file = getFileName() + "_temp.txt";
+	//Create a .txt file
+	ifstream tabDcChckr(file);
 
+	
 }
 
 void JARfc()
@@ -227,6 +242,11 @@ void compareFiles()
 
 }
 
+void cnctJvDc()
+{
+	ShellExecuteA(NULL,"open","http://docs.oracle.com/javase/tutorial/",NULL,NULL,SW_SHOW);
+}
+
 void cnctStckOvrflw()
 {
 	ShellExecuteA(NULL,"open","www.stackoverflow.com",NULL,NULL,SW_SHOW);
@@ -234,9 +254,13 @@ void cnctStckOvrflw()
 
 void cnctgtbsh()
 {
-	string configFile = "C:/Program Files (x86)/Notepad++/plugins/Config/PESMU/config.txt";
 	ifstream conFilepath;
 	conFilepath.open("C:/Program Files (x86)/Notepad++/plugins/Config/PESMU/config.txt");
+	if(conFilepath.fail())
+	{
+		::MessageBox(NULL, TEXT("The config.txt file is not found or corrupt. Please replace the document."), TEXT("PESMU Plugin"), MB_OK);
+		return;
+	}
 	string path;
 	while(conFilepath.is_open())
 	{
