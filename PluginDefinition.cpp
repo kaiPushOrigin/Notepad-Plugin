@@ -277,7 +277,27 @@ void JARfc()
 
 void compareFiles()
 {
-
+	vector<wstring> vps;
+	vector<TCHAR*> wps;
+	int n = SendMessage(nppData._nppHandle,NPPM_GETNBOPENFILES,0,ALL_OPEN_FILES);
+	if( n > 0 && n <128 )
+	{
+		wps.resize(n);
+		for( int i = 0;i < n;i++ )
+		{
+			wstring ws;
+			ws.resize(512);
+			vps.push_back(ws);
+			wps[i] = (TCHAR*)vps[i].c_str();
+		}
+		SendMessage(nppData._nppHandle,NPPM_GETOPENFILENAMES,(LPARAM)&wps[0],n);
+	}
+	wstring ab = vps[0].c_str();
+	wstring cd = vps[1].c_str();
+	string file1 = string(ab.begin(),ab.end());
+	string file2 = string(cd.begin(),cd.end());
+	string concate = "/k fc /n " + file1 + " " + file2;
+    ShellExecuteA(NULL,"open", "C:/WINDOWS/system32/cmd.exe",concate.c_str(),NULL,SW_SHOW);
 }
 
 void cnctStckOvrflw()
